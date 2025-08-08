@@ -7,12 +7,25 @@
 generator client {
   provider = "prisma-client-js"
   preview  = ["relationJoins"]
-  output   = "../generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+  schemas   = ["public"]
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  password     String  
+  applications Application[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  
+  @@map("users")
+  @@schema("public")
 }
 
 model Application {
@@ -23,4 +36,9 @@ model Application {
   url       String?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@schema("public")
 }

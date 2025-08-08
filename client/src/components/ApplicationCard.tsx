@@ -54,13 +54,14 @@ export default function ApplicationCard({ app }: { app: Application }) {
       ref={setNodeRef}
       style={style}
       {...attributes}
-      className="p-4 border rounded-lg shadow-sm bg-black/65 touch-none relative group"
+      className="p-4 border rounded-lg shadow-sm bg-black/65 touch-none relative group overflow-auto"
     >
       <div className="cursor-grab text-gray-400" {...listeners}>
         <DragHandle />
       </div>
       <h3 className="font-bold">{app.role}</h3>
       <p className="text-black">{app.company}</p>
+      <a href={app.url}>Link</a>
       <button
         onClick={handleEdit}
         className="p-1 text-white"

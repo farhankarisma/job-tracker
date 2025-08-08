@@ -13,3 +13,8 @@ export interface ColumnProps {
   title: string;
   children: React.ReactNode;
 }
+
+export interface User {
+  id: string;
+  email: string;
+}

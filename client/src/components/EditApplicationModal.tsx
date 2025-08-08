@@ -5,7 +5,7 @@ import { RootState, AppDispatch } from "@/lib/store";
 import { useEffect, useState } from "react";
 import { closeEditModal } from "@/lib/features/ui/uiSlice";
 import { editApplication } from "@/lib/features/applications/applicationsSlice";
-import { Application } from "@/lib/type";
+
 
 export default function EditApplicationModal() {
   const dispatch: AppDispatch = useDispatch();
