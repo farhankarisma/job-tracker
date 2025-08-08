@@ -14,6 +14,7 @@ const storedUser =
   typeof window !== "undefined" && localStorage.getItem("user");
 const storedToken =
   typeof window !== "undefined" ? localStorage.getItem("token") : null;
+console.log("Initial load - Reading from localStorage:", storedToken);
 
 const initialState: AuthState = {
   user: storedUser ? JSON.parse(storedUser) : null,
@@ -57,6 +58,7 @@ export const login = createAsyncThunk(
       if (!response.ok) {
         return thunkAPI.rejectWithValue(data.error || "Login failed");
       }
+      console.log("Login successful - Saving to localStorage:", data.token);
       localStorage.setItem("token", data.token);
       return data;
     } catch (error: any) {
@@ -80,6 +82,10 @@ export const authSlice = createSlice({
       localStorage.removeItem("user"); // Also good to remove the user object
       state.user = null;
       state.token = null;
+      state.isLoading = false;
+      state.isSucces = false;
+      state.isError = false;
+      state.message = "";
     },
   },
   extraReducers: (builder) => {

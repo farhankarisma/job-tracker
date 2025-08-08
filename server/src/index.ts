@@ -75,6 +75,7 @@ app.get('/api/applications', protect, async (req: AuthRequest, res) => {
   try {
     const userId = req.user!.userId;
     // IMPORTANT: We now only find applications where the userId matches the logged-in user's ID.
+    console.log(`--- Fetching applications for userId: ${userId} ---`);
     const applications = await prisma.application.findMany({
       where: { userId: userId },
       orderBy: { createdAt: 'desc' },

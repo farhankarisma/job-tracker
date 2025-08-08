@@ -1,15 +1,8 @@
-import ApplicationBoard from "@/components/ApplicationBoard";
-import AddNewApplication from "@/components/AddNewApplication";
-import EditApplicationModal from "@/components/EditApplicationModal";
+// src/app/(auth)/login/page.tsx
+import Auth from '@/components/Auth';
 
-export default function HomePage() {
-  return (
-    <main className="p-4 sm:p-8  min-h-screen">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">My Job Tracker</h1>
-
-      <AddNewApplication />
-      <ApplicationBoard />
-      <EditApplicationModal />
-    </main>
-  );
+export default function LoginPage() {
+  // This page just renders the reusable Auth component.
+  // By default, the Auth component starts in 'signin' mode.
+  return <Auth />;
 }
