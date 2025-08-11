@@ -1,61 +1,75 @@
 "use client";
 
-import { useEffect } from "react";
+import { useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/lib/store";
-import {
-  fetchApplications,
-  updateApplicationStatus,
-} from "@/lib/features/applications/applicationsSlice";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
-import Column from "./Column";
-import ApplicationCard from "./ApplicationCard";
+import { Job, JobStatus } from "@/lib/type";
+import JobColumn from "./JobColumn";
 
-const STATUSES = ["WISHLIST", "APPLIED", "INTERVIEWING", "OFFER", "REJECTED"];
+// We will create these components in the next steps
+// import JobColumn from './JobColumn';
+// import { updateJobStatus } from '@/lib/features/jobs/jobsSlice';
 
-export default function ApplicationBoard() {
+const STATUSES: JobStatus[] = [
+  JobStatus.APPLIED,
+  JobStatus.INTERVIEWING,
+  JobStatus.OFFERED,
+  JobStatus.REJECTED,
+  JobStatus.WITHDRAWN,
+];
+
+export default function JobBoard() {
   const dispatch: AppDispatch = useDispatch();
+  const { items: jobs } = useSelector((state: RootState) => state.jobs);
 
-  const { items: applications, status } = useSelector(
-    (state: RootState) => state.application
-  );
+  const groupedJobs = useMemo(() => {
+    const groups: { [key in JobStatus]: Job[] } = {
+      APPLIED: [],
+      INTERVIEWING: [],
+      OFFERED: [],
+      REJECTED: [],
+      WITHDRAWN: [],
+    };
 
-  useEffect(() => {
-    if (status === "idle") {
-      dispatch(fetchApplications());
-    }
-  }, [status, dispatch]);
+    jobs.forEach((job) => {
+      if (groups[job.status]) {
+        groups[job.status].push(job);
+      }
+    });
+
+    return groups;
+  }, [jobs]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over) return;
-    const cardId = active.id as string;
-    const columnId = over.id as string;
 
-    const currentCard = applications.find((app) => app.id === cardId);
+    const jobId = active.id as string;
+    const newStatus = over.id as JobStatus;
 
-    if (currentCard && currentCard.status !== columnId) {
-      dispatch(updateApplicationStatus({ id: cardId, status: columnId }));
+    const currentJob = jobs.find((job) => job.id === jobId);
+
+    if (currentJob && currentJob.status !== newStatus) {
+      // We will create this action in a later step
+      // dispatch(updateJobStatus({ id: jobId, status: newStatus }));
+      console.log(`Move job ${jobId} to ${newStatus}`);
     }
   };
 
   return (
     <DndContext onDragEnd={handleDragEnd}>
-      {status === "loading" && <p>Loading applications...</p>}
-      {status === "failed" && <p>Error loading data.</p>}
-      {status === "succeeded" && (
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-5">
-          {STATUSES.map((statusTitle) => (
-            <Column key={statusTitle} id={statusTitle} title={statusTitle}>
-              {applications
-                .filter((app) => app.status === statusTitle)
-                .map((app) => (
-                  <ApplicationCard key={app.id} app={app} />
-                ))}
-            </Column>
-          ))}
-        </div>
-      )}
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-5">
+        {STATUSES.map((status) => (
+          // Use the new JobColumn component here
+          <JobColumn
+            key={status}
+            id={status}
+            title={status}
+            jobs={groupedJobs[status]}
+          />
+        ))}
+      </div>
     </DndContext>
   );
 }

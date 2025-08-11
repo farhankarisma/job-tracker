@@ -1,41 +1,60 @@
-// server/src/middleware/authMiddleware.ts
-import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import { JWT_SECRET } from '../config'; // Using the hardcoded secret
+import { createClient } from "@supabase/supabase-js";
+import { NextFunction, Request, Response } from "express";
+import 'dotenv/config';
 
-export interface AuthRequest extends Request {
-  user?: { userId: string };
+// Debug: Log environment variables (remove in production)
+console.log('SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Set' : 'Not set');
+console.log('SUPABASE_SERVICE_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Set' : 'Not set');
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  throw new Error('Missing Supabase environment variables. Please check your .env file.');
 }
 
-export const protect = (req: AuthRequest, res: Response, next: NextFunction) => {
-  console.log('--- PROTECT MIDDLEWARE RUNNING ---');
+const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false,
+  },
+});
 
-  // Log all headers to see exactly what's coming from Postman
-  console.log('Request Headers:', req.headers);
+export interface AuthRequest extends Request {
+  user?: any;
+}
 
+export const protect = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
   let token;
-  const authHeader = req.headers.authorization;
 
-  if (authHeader && authHeader.startsWith('Bearer ')) {
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
     try {
-      console.log('Authorization Header Found:', authHeader);
-
-      token = authHeader.split(' ')[1];
-      console.log('Extracted Token:', token);
-      console.log('Secret Key Being Used:', JWT_SECRET);
-
-      const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
-      console.log('SUCCESS: Token successfully decoded:', decoded);
-
-      req.user = decoded;
+      // Fix: Split by space, not empty string, and get index [1]
+      token = req.headers.authorization.split(" ")[1];
+      
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser(token);
+      
+      if (error || !user) {
+        return res.status(401).json({ error: "Not authorized, token failed" });
+      }
+      
+      req.user = user;
       next();
     } catch (error) {
-      console.error('!!! TOKEN VERIFICATION FAILED !!!');
-      console.error(error); // This will log the actual error from the jwt library
-      res.status(401).json({ error: 'Not authorized, token failed' });
+      console.error('Auth error:', error);
+      res.status(401).json({ error: "Not authorized, token failed" });
     }
   } else {
-    console.error('!!! No token found or header format is incorrect !!!');
-    res.status(401).json({ error: 'Not authorized, no token' });
+    res.status(401).json({ error: "Not authorized, no token" });
   }
 };

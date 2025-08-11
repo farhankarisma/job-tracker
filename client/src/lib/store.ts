@@ -1,14 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
-import applicationsReducer from "./features/applications/applicationsSlice";
+import jobsReducer from "./features/jobs/jobsSlice";
 import uiReducer from "./features/ui/uiSlice";
-import authReducer from "./features/auth/authSlice";
 
 export const store = configureStore({
   reducer: {
-    application: applicationsReducer,
+    jobs: jobsReducer,
     ui: uiReducer,
-    auth: authReducer,
-  }, // We'll add reducers here later
+  },
 });
 
 export type RootState = ReturnType<typeof store.getState>;

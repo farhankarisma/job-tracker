@@ -1,30 +1,43 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface UIState {
-  isEditModalOpen: boolean;
-  editingApplicationId: string | null;
+  isAddJobModalOpen: boolean;
+  isEditJobModalOpen: boolean;
+  editingJobId: string | null;
 }
 
 const initialState: UIState = {
-  isEditModalOpen: false,
-  editingApplicationId: null,
+  isAddJobModalOpen: false,
+  isEditJobModalOpen: false,
+  editingJobId: null,
 };
 
 const uiSlice = createSlice({
-  name: "ui",
+  name: 'ui',
   initialState,
   reducers: {
-    openEditModal: (state, action: PayloadAction<string>) => {
-      state.isEditModalOpen = true;
-      state.editingApplicationId = action.payload;
+    openAddJobModal: (state) => {
+      state.isAddJobModalOpen = true;
     },
-    closeEditModal: (state) => {
-      state.isEditModalOpen = false;
-      state.editingApplicationId = null;
+    closeAddJobModal: (state) => {
+      state.isAddJobModalOpen = false;
+    },
+    openEditJobModal: (state, action: PayloadAction<string>) => {
+      state.isEditJobModalOpen = true;
+      state.editingJobId = action.payload;
+    },
+    closeEditJobModal: (state) => {
+      state.isEditJobModalOpen = false;
+      state.editingJobId = null;
     },
   },
 });
 
-export const { openEditModal, closeEditModal } = uiSlice.actions;
+export const {
+  openAddJobModal,
+  closeAddJobModal,
+  openEditJobModal,
+  closeEditJobModal,
+} = uiSlice.actions;
 
 export default uiSlice.reducer;
