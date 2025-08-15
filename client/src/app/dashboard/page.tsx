@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/src/supabaseClient";
 import type { Session } from "@supabase/supabase-js";
@@ -10,11 +10,14 @@ import { fetchJobs } from "@/lib/features/jobs/jobsSlice";
 import { openAddJobModal } from "@/lib/features/ui/uiSlice";
 
 import JobBoard from "@/components/JobBoard";
+import FilterableJobBoard from "@/components/FilterableJobBoard";
+import JobSearchBar from "@/components/JobSearchBar";
 import AddJobModal from "@/components/AddModalJob";
 import EditJobModal from "@/components/EditJobModal";
 import BoardSkeleton from "@/components/BoardSkeleton";
 import Sidebar from "@/components/Sidebar";
 import toast from "react-hot-toast";
+import { Job } from "@/lib/type";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -22,6 +25,7 @@ export default function DashboardPage() {
 
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
 
   const { status, items: jobs } = useSelector((state: RootState) => state.jobs);
 
@@ -50,6 +54,21 @@ export default function DashboardPage() {
 
     return () => subscription.unsubscribe();
   }, [router, dispatch, status]);
+
+  // Initialize filtered jobs when jobs change
+  useEffect(() => {
+    setFilteredJobs(jobs);
+  }, [jobs]);
+
+  const handleFilterChange = useCallback((filtered: Job[]) => {
+    setFilteredJobs(filtered);
+  }, []);
+
+  const clearFilters = useCallback(() => {
+    setFilteredJobs(jobs);
+  }, [jobs]);
+
+  const hasFiltersApplied = filteredJobs.length !== jobs.length;
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -214,7 +233,31 @@ export default function DashboardPage() {
           </div>
 
           {status === "loading" && <BoardSkeleton />}
-          {status === "succeeded" && <JobBoard />}
+          {status === "succeeded" && (
+            <>
+              <JobSearchBar 
+                onFilterChange={handleFilterChange} 
+                onClearFilters={clearFilters}
+                hasActiveFilters={hasFiltersApplied}
+              />
+              
+              {/* Results Summary */}
+              <div className="mb-4 text-sm text-gray-600">
+                Showing {filteredJobs.length} of {jobs.length} job application{jobs.length !== 1 ? 's' : ''}
+                {hasFiltersApplied && (
+                  <span className="ml-2 text-blue-600 font-medium">
+                    (filtered)
+                  </span>
+                )}
+              </div>
+              
+              <FilterableJobBoard 
+                jobs={filteredJobs} 
+                onClearFilters={clearFilters}
+                hasActiveFilters={hasFiltersApplied}
+              />
+            </>
+          )}
           {status === "failed" && (
             <p className="text-red-500">Failed to load jobs.</p>
           )}

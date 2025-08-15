@@ -2,16 +2,17 @@
 'use client';
 
 import { useDroppable } from '@dnd-kit/core';
-import { Job } from '@/lib/type';
+import { Job, JobStatus } from '@/lib/type';
 import JobCard from './JobCard';
 
 interface JobColumnProps {
   id: string;
   title: string;
   jobs: Job[];
+  pendingStatusUpdates: { [jobId: string]: JobStatus };
 }
 
-export default function JobColumn({ id, title, jobs }: JobColumnProps) {
+export default function JobColumn({ id, title, jobs, pendingStatusUpdates }: JobColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: id,
   });
@@ -30,7 +31,11 @@ export default function JobColumn({ id, title, jobs }: JobColumnProps) {
       </h2>
       <div className="space-y-4 flex-grow">
         {jobs.map((job) => (
-          <JobCard key={job.id} job={job} />
+          <JobCard 
+            key={job.id} 
+            job={job} 
+            isPending={job.id in pendingStatusUpdates}
+          />
         ))}
       </div>
     </div>

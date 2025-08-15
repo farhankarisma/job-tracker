@@ -17,6 +17,7 @@ import {
 import { Job, JobStatus } from '@/lib/type';
 import JobColumn from './JobColumn';
 import EmptyState from './EmptyState';
+import NoResultsState from './NoResultsState';
 import { updateJobStatus } from '@/lib/features/jobs/jobsSlice';
 import toast from 'react-hot-toast';
 
@@ -28,9 +29,15 @@ const STATUSES: JobStatus[] = [
   JobStatus.WITHDRAWN,
 ];
 
-export default function JobBoard() {
+interface FilterableJobBoardProps {
+  jobs: Job[];
+  onClearFilters?: () => void;
+  hasActiveFilters?: boolean;
+}
+
+export default function FilterableJobBoard({ jobs, onClearFilters, hasActiveFilters = false }: FilterableJobBoardProps) {
   const dispatch: AppDispatch = useDispatch();
-  const { items: jobs, pendingStatusUpdates } = useSelector((state: RootState) => state.jobs);
+  const { pendingStatusUpdates } = useSelector((state: RootState) => state.jobs);
   
   const [activeJob, setActiveJob] = useState<Job | null>(null);
 
@@ -88,7 +95,14 @@ export default function JobBoard() {
   };
 
   if (jobs.length === 0) {
-    return <EmptyState />;
+    return hasActiveFilters ? (
+      <NoResultsState 
+        onClearFilters={onClearFilters || (() => {})} 
+        hasFilters={hasActiveFilters} 
+      />
+    ) : (
+      <EmptyState />
+    );
   }
 
   return (

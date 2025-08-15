@@ -11,7 +11,7 @@ import { TiPencil, TiDelete } from "react-icons/ti";
 import toast from "react-hot-toast";
 import { useState } from "react";
 
-export default function JobCard({ job }: { job: Job }) {
+export default function JobCard({ job, isPending = false }: { job: Job; isPending?: boolean }) {
   const dispatch: AppDispatch = useDispatch();
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -117,8 +117,19 @@ export default function JobCard({ job }: { job: Job }) {
             ? "opacity-50 cursor-grabbing scale-105 z-50"
             : "hover:scale-102"
         }
+        ${
+          isPending
+            ? "ring-2 ring-blue-400 ring-opacity-60 bg-blue-50 border-blue-300 animate-pulse"
+            : ""
+        }
       `}
     >
+      {/* Show updating indicator */}
+      {isPending && (
+        <div className="absolute top-1 left-1">
+          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+        </div>
+      )}
       <div {...listeners} className="cursor-grab active:cursor-grabbing">
         <h3 className="font-bold text-gray-800 pr-12">{job.position}</h3>
         <p className="text-gray-600 text-sm">{job.company}</p>

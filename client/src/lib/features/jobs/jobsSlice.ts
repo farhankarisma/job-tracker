@@ -6,12 +6,14 @@ interface JobsState {
   items: Job[];
   status: "idle" | "loading" | "succeeded" | "failed";
   error: string | null;
+  pendingStatusUpdates: { [jobId: string]: JobStatus }; // Track pending status changes
 }
 
 const initialState: JobsState = {
   items: [],
   status: "idle",
   error: null,
+  pendingStatusUpdates: {},
 };
 
 // --- SECURE ASYNC THUNKS ---
@@ -189,9 +191,23 @@ const jobsSlice = createSlice({
       .addCase(addJob.fulfilled, (state, action: PayloadAction<Job>) => {
         state.items.unshift(action.payload);
       })
+      // Optimistic update: immediately change the status when the request starts
+      .addCase(updateJobStatus.pending, (state, action) => {
+        const { id, status } = action.meta.arg;
+        const index = state.items.findIndex((job) => job.id === id);
+        if (index !== -1) {
+          // Store the original status before changing it
+          state.pendingStatusUpdates[id] = state.items[index].status;
+          // Apply the optimistic update
+          state.items[index].status = status;
+        }
+      })
       .addCase(
         updateJobStatus.fulfilled,
         (state, action: PayloadAction<{ id: string; status: JobStatus }>) => {
+          // Remove from pending updates since it succeeded
+          delete state.pendingStatusUpdates[action.payload.id];
+          // Ensure the status is correct (should already be updated from pending)
           const index = state.items.findIndex(
             (job) => job.id === action.payload.id
           );
@@ -200,6 +216,23 @@ const jobsSlice = createSlice({
           }
         }
       )
+      // Revert optimistic update if the request fails
+      .addCase(updateJobStatus.rejected, (state, action) => {
+        const { id } = action.meta.arg;
+        const originalStatus = state.pendingStatusUpdates[id];
+        
+        if (originalStatus) {
+          // Revert to the original status
+          const index = state.items.findIndex((job) => job.id === id);
+          if (index !== -1) {
+            state.items[index].status = originalStatus;
+          }
+          // Remove from pending updates
+          delete state.pendingStatusUpdates[id];
+        }
+        
+        state.error = action.payload as string;
+      })
       .addCase(editJob.fulfilled, (state, action: PayloadAction<Job>) => {
         const index = state.items.findIndex(
           (job) => job.id === action.payload.id
