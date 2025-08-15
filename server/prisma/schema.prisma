@@ -1,52 +1,35 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
-  preview  = ["relationJoins"]
 }
 
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
-  schemas   = ["public"] 
 }
 
-// Job application model
 model Job {
-  id          String   @id @default(cuid())
-  company     String
-  position    String
-  status      JobStatus @default(APPLIED)
-  appliedAt   DateTime @default(now()) @map("applied_at")
-  description String?
-  salary      String?
-  location    String?
-  jobUrl      String?  @map("job_url")
-  notes       String?
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  
-  // Link to Supabase auth user
-  userId      String   @map("user_id")
-  
+  id            String    @id @default(cuid())
+  company       String
+  position      String
+  status        JobStatus @default(APPLIED)
+  appliedAt     DateTime  @default(now()) @map("applied_at")
+  description   String?
+  salary        String?
+  location      String?
+  jobUrl        String?   @map("job_url")
+  notes         String?
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  userId        String    @map("user_id")
+  color         String?   @default("#FFFFFF")
+  reminderAt    DateTime? @map("reminder_at")
+  type          JobType   @default(INTERNSHIP)
+  reminder_sent Boolean   @default(false)
+
   @@map("jobs")
-  @@schema("public")
 }
 
-// Job status enum
-enum JobStatus {
-  APPLIED
-  INTERVIEWING
-  OFFERED
-  REJECTED
-  WITHDRAWN
-  
-  @@schema("public")
-}
-
-// Contact model for networking
 model Contact {
   id        String   @id @default(cuid())
   name      String
@@ -57,10 +40,50 @@ model Contact {
   notes     String?
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
-  
-  // Link to Supabase auth user
   userId    String   @map("user_id")
-  
+
   @@map("contacts")
-  @@schema("public")
+}
+
+model File {
+  id           String         @id @default(dbgenerated("(gen_random_uuid())::text"))
+  filename     String
+  originalName String         @map("original_name")
+  mimeType     String         @map("mime_type")
+  size         Int
+  path         String
+  category     file_category? @default(OTHER)
+  description  String?
+  tags         String?
+  isPublic     Boolean?       @default(false) @map("is_public")
+  createdAt    DateTime?      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime?      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  userId       String         @map("user_id")
+
+  @@map("files")
+}
+
+enum JobType {
+  INTERNSHIP
+  FULL_TIME
+  PART_TIME
+  FREELANCE
+}
+
+enum JobStatus {
+  APPLIED
+  INTERVIEWING
+  OFFERED
+  REJECTED
+  WITHDRAWN
+}
+
+enum file_category {
+  RESUME
+  COVER_LETTER
+  PORTFOLIO
+  CERTIFICATE
+  TRANSCRIPT
+  REFERENCE
+  OTHER
 }

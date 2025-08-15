@@ -1,60 +1,107 @@
-'use client';
+"use client";
 
-import { useDraggable } from '@dnd-kit/core';
-import { Job } from '@/lib/type';
-import { deleteJob } from '@/lib/features/jobs/jobsSlice';
-import { useDispatch } from 'react-redux';
-import { AppDispatch } from '@/lib/store';
-import { TiDelete, TiPencil } from "react-icons/ti";
-import { openEditJobModal } from '@/lib/features/ui/uiSlice';
-import toast from 'react-hot-toast';
+import { useDraggable } from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
+import { Job } from "@/lib/type";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/lib/store";
+import { deleteJob } from "@/lib/features/jobs/jobsSlice";
+import { openEditJobModal } from "@/lib/features/ui/uiSlice";
+import { TiPencil, TiDelete } from "react-icons/ti";
+import toast from "react-hot-toast";
+import { useState } from "react";
 
 export default function JobCard({ job }: { job: Job }) {
   const dispatch: AppDispatch = useDispatch();
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
-    id: job.id,
-    data: { job },
-  });
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({
+      id: job.id,
+      data: { job },
+    });
 
   const style = {
-    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+    transform: CSS.Translate.toString(transform),
+    backgroundColor: job.color || "#ffffff",
+    borderColor: job.color === "#ffffff" ? "#E5E7EB" : job.color,
   };
 
   const handleEdit = () => {
     dispatch(openEditJobModal(job.id));
   };
 
-  // 2. Update the handleDelete function to use toast
-  const handleDelete = () => {
-    toast((t) => (
-      <div className="flex flex-col gap-2">
-        <p className="font-semibold">
-          Delete application for {job.company}?
-        </p>
-        <div className="flex gap-2">
-          <button
-            onClick={() => {
-              dispatch(deleteJob(job.id));
-              toast.dismiss(t.id); // Dismiss the confirmation toast
-              toast.success('Application deleted'); // Show a success toast
-            }}
-            className="px-3 py-1 bg-red-600 text-white rounded text-sm"
-          >
-            Confirm
-          </button>
-          <button
-            onClick={() => toast.dismiss(t.id)}
-            className="px-3 py-1 bg-gray-200 rounded text-sm"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    ), {
-      // Optional: Add a custom icon
-      icon: '🤔',
-    });
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent any drag events
+    
+    // Prevent multiple toasts from appearing
+    if (isDeleting) {
+      console.log('Delete already in progress, ignoring click');
+      return;
+    }
+    
+    console.log('Delete button clicked for job:', job.id, job.company); // Debug log
+    setIsDeleting(true);
+    
+    // Custom toast confirmation - centered
+    toast(
+      (t) => {
+        return (
+          <div className="flex flex-col gap-3">
+            <p className="font-semibold text-gray-800">
+              Delete application for {job.company}?
+            </p>
+            <p className="text-sm text-gray-600">
+              {job.position} - This action cannot be undone.
+            </p>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => {
+                  toast.dismiss(t.id);
+                  setIsDeleting(false); // Reset state when cancelled
+                  console.log('User cancelled deletion'); // Debug log
+                }}
+                className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  console.log('User confirmed deletion, dispatching deleteJob...'); // Debug log
+                  
+                  dispatch(deleteJob(job.id))
+                    .unwrap()
+                    .then(() => {
+                      console.log('Delete successful!'); // Debug log
+                      toast.dismiss(t.id);
+                      toast.success("Application deleted successfully!");
+                      // Don't reset isDeleting here since component will unmount
+                    })
+                    .catch((error) => {
+                      console.error('Delete error:', error); // Debug log
+                      toast.dismiss(t.id);
+                      toast.error(`Error deleting application: ${error}`);
+                      setIsDeleting(false); // Reset state on error
+                    });
+                }}
+                className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        );
+      },
+      {
+        icon: '🗑️',
+        duration: Infinity, // Keep open until user decides
+        position: 'top-center', // Center the toast
+        style: {
+          minWidth: '350px',
+          maxWidth: '400px',
+        },
+      }
+    );
   };
 
   return (
@@ -62,25 +109,46 @@ export default function JobCard({ job }: { job: Job }) {
       ref={setNodeRef}
       style={style}
       {...attributes}
-      className="p-4 border rounded-lg shadow-sm bg-white touch-none relative group"
+      className={`
+        p-4 border rounded-lg shadow-sm touch-none relative group
+        cursor-grab hover:shadow-md transition-all duration-200
+        ${
+          isDragging
+            ? "opacity-50 cursor-grabbing scale-105 z-50"
+            : "hover:scale-102"
+        }
+      `}
     >
-      <div {...listeners} className="cursor-grab">
+      <div {...listeners} className="cursor-grab active:cursor-grabbing">
         <h3 className="font-bold text-gray-800 pr-12">{job.position}</h3>
         <p className="text-gray-600 text-sm">{job.company}</p>
+
+        {/* Display the Job Type as a small badge */}
+        <div className="mt-2">
+          <span className="text-xs font-semibold bg-gray-200 text-gray-700 px-2 py-1 rounded-full capitalize">
+            {job.type.toLowerCase().replace("_", " ")}
+          </span>
+        </div>
       </div>
-      
+
       <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button 
+        <button
           onClick={handleEdit}
-          className="p-1 text-gray-400 hover:text-blue-600"
+          className="p-1 text-gray-500 hover:text-blue-600 transition-colors"
           aria-label="Edit job"
         >
           <TiPencil size={20} />
         </button>
-        <button 
+        <button
           onClick={handleDelete}
-          className="p-1 text-gray-400 hover:text-red-600"
+          disabled={isDeleting}
+          className={`p-1 transition-colors ${
+            isDeleting 
+              ? 'text-gray-400 cursor-not-allowed' 
+              : 'text-gray-500 hover:text-red-600'
+          }`}
           aria-label="Delete job"
+          type="button"
         >
           <TiDelete size={20} />
         </button>

@@ -1,8 +1,9 @@
+// src/components/JobColumn.tsx
 'use client';
 
 import { useDroppable } from '@dnd-kit/core';
 import { Job } from '@/lib/type';
-import JobCard from './JobCard'; // We will create this next
+import JobCard from './JobCard';
 
 interface JobColumnProps {
   id: string;
@@ -11,14 +12,18 @@ interface JobColumnProps {
 }
 
 export default function JobColumn({ id, title, jobs }: JobColumnProps) {
-  const { setNodeRef } = useDroppable({
+  const { setNodeRef, isOver } = useDroppable({
     id: id,
   });
 
   return (
     <div
       ref={setNodeRef}
-      className="bg-gray-100 p-4 rounded-lg min-h-[200px] flex flex-col"
+      className={`
+        bg-gray-100 p-4 rounded-lg min-h-[500px] flex flex-col
+        transition-colors duration-200 border-2 border-transparent
+        ${isOver ? 'bg-blue-50 border-blue-300 ring-2 ring-blue-200' : ''}
+      `}
     >
       <h2 className="text-lg font-bold mb-4 text-gray-700 capitalize">
         {title.toLowerCase().replace('_', ' ')}

@@ -20,4 +20,4 @@ With a simple drag-and-drop,
 it helps you trace your steps, organize your path,
 and bring clarity to the noise.
 
-Dedicated to my colleagues who are in the same battlefield to gain their dream internship/job!
+Dedicated to my colleagues who are in the same problem to gain their dream internship/job!

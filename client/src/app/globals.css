@@ -3,13 +3,8 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-}
-
-@theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,4 +18,77 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Drag and Drop Smooth Animations */
+.drag-overlay {
+  z-index: 999;
+  transform-origin: 0 0;
+}
+
+/* Smooth transitions for cards */
+.job-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.job-card:hover {
+  transform: translateY(-2px);
+}
+
+.job-card.dragging {
+  cursor: grabbing !important;
+  transform: rotate(5deg) scale(1.05);
+  z-index: 1000;
+}
+
+/* Drop zone animations */
+.drop-zone {
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.drop-zone.active {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+/* Cursor states */
+.cursor-grab:active {
+  cursor: grabbing;
+}
+
+/* Scale animations */
+.hover\:scale-102:hover {
+  transform: scale(1.02);
+}
+
+/* Toast animations */
+@keyframes enter {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes leave {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.animate-enter {
+  animation: enter 0.3s ease-out forwards;
+}
+
+.animate-leave {
+  animation: leave 0.2s ease-in forwards;
 }
