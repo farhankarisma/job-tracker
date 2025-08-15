@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { HiOutlineDownload, HiOutlineTrash, HiOutlinePencil } from 'react-icons/hi';
 import { FileItem } from '@/lib/features/file/fileSlice';
+import toast from 'react-hot-toast';
 
 interface FileCardProps {
   file: FileItem;
@@ -32,9 +33,49 @@ export default function FileCard({ file, onDownload, onDelete, onUpdate, formatF
   };
 
   const handleDelete = () => {
-    if (confirm('Are you sure you want to delete this file?')) {
-      onDelete(file);
-    }
+    toast(
+      (t) => {
+        return (
+          <div className="flex flex-col gap-3">
+            <p className="font-semibold text-gray-800">
+              Delete file "{file.originalName}"?
+            </p>
+            <p className="text-sm text-gray-600">
+              This action cannot be undone.
+            </p>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => {
+                  toast.dismiss(t.id);
+                }}
+                className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  toast.dismiss(t.id);
+                  onDelete(file);
+                  toast.success('File deleted successfully');
+                }}
+                className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        );
+      },
+      {
+        icon: '🗑️',
+        duration: Infinity,
+        position: 'top-center',
+        style: {
+          minWidth: '350px',
+          maxWidth: '400px',
+        },
+      }
+    );
   };
 
   return (
@@ -90,7 +131,7 @@ export default function FileCard({ file, onDownload, onDelete, onUpdate, formatF
 
       {/* Edit Form */}
       {isEditing && (
-        <div className="mt-4 pt-4 border-t space-y-3">
+        <div className="mt-4 pt-4 border-t space-y-3 text-black/55">
           <div>
             <label className="block text-xs font-medium mb-1">Category</label>
             <select
