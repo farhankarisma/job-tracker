@@ -36,11 +36,9 @@ export default function JobCard({ job, isPending = false }: { job: Job; isPendin
     
     // Prevent multiple toasts from appearing
     if (isDeleting) {
-      console.log('Delete already in progress, ignoring click');
       return;
     }
     
-    console.log('Delete button clicked for job:', job.id, job.company); // Debug log
     setIsDeleting(true);
     
     // Custom toast confirmation - centered
@@ -59,7 +57,6 @@ export default function JobCard({ job, isPending = false }: { job: Job; isPendin
                 onClick={() => {
                   toast.dismiss(t.id);
                   setIsDeleting(false); // Reset state when cancelled
-                  console.log('User cancelled deletion'); // Debug log
                 }}
                 className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors text-sm"
               >
@@ -67,12 +64,9 @@ export default function JobCard({ job, isPending = false }: { job: Job; isPendin
               </button>
               <button
                 onClick={() => {
-                  console.log('User confirmed deletion, dispatching deleteJob...'); // Debug log
-                  
                   dispatch(deleteJob(job.id))
                     .unwrap()
                     .then(() => {
-                      console.log('Delete successful!'); // Debug log
                       toast.dismiss(t.id);
                       toast.success("Application deleted successfully!");
                       // Don't reset isDeleting here since component will unmount
