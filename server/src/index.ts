@@ -4,6 +4,7 @@ import path from "path";
 import prisma from "./lib/prisma";
 import { protect, AuthRequest } from "./middleware/authMiddleware";
 import { uploadSingle, uploadMultiple } from "./middleware/uploadMiddleware";
+import { uploadSingleCloudinary, uploadMultipleCloudinary } from "./middleware/cloudinaryMiddleware";
 import fileService from "./services/fileService";
 import "dotenv/config";
 import { startReminderCronJob } from "./jobs/cron";
@@ -11,6 +12,12 @@ import { checkReminders } from "./jobs/cron";
 import { sendReminderEmail } from "./services/emailService";
 import { createClient } from '@supabase/supabase-js';
 
+// Check if Cloudinary is configured
+const USE_CLOUDINARY = !!(process.env.CLOUDINARY_CLOUD_NAME && 
+                          process.env.CLOUDINARY_API_KEY && 
+                          process.env.CLOUDINARY_API_SECRET);
+
+console.log(`📁 File Storage: ${USE_CLOUDINARY ? 'Cloudinary (Cloud)' : 'Local Storage'}`);
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -423,54 +430,74 @@ app.post("/api/files/upload", protect, uploadSingle, async (req: AuthRequest, re
   }
 });
 
-// Upload multiple files
-app.post("/api/files/upload-multiple", protect, uploadMultiple, async (req: AuthRequest, res) => {
+// Upload multiple files (Dynamic: Cloudinary or Local)
+app.post("/api/files/upload-multiple", protect, 
+  USE_CLOUDINARY ? uploadMultipleCloudinary : uploadMultiple, 
+  async (req: AuthRequest, res) => {
   try {
-    if (!req.files || (req.files as Express.Multer.File[]).length === 0) {
+    if (!req.files || (req.files as any[]).length === 0) {
       return res.status(400).json({ error: "No files uploaded" });
     }
 
-    const files = req.files as Express.Multer.File[];
+    const files = req.files as any[];
     const uploadedFiles = [];
     const failedFiles = [];
 
     for (const file of files) {
       try {
-        // Validate each file
-        const validation = fileService.validateFile(file);
-        if (!validation.isValid) {
-          failedFiles.push({
-            filename: file.originalname,
-            error: validation.error
+        if (USE_CLOUDINARY) {
+          // Cloudinary file handling
+          const savedFile = await prisma.file.create({
+            data: {
+              filename: file.filename,
+              originalName: file.originalname,
+              mimeType: file.mimetype,
+              size: file.size,
+              path: file.path, // Cloudinary URL
+              category: req.body.category || 'OTHER',
+              description: req.body.description || '',
+              tags: req.body.tags || '',
+              userId: req.user.id,
+            },
           });
-          continue;
+          uploadedFiles.push(savedFile);
+        } else {
+          // Local file handling (existing logic)
+          const validation = fileService.validateFile(file);
+          if (!validation.isValid) {
+            failedFiles.push({
+              filename: file.originalname,
+              error: validation.error
+            });
+            continue;
+          }
+
+          // Save file to disk
+          const fileResult = await fileService.saveFile(
+            file.buffer,
+            file.originalname,
+            file.mimetype,
+            req.user.id
+          );
+
+          // Save file metadata to database
+          const savedFile = await prisma.file.create({
+            data: {
+              filename: fileResult.filename,
+              originalName: fileResult.originalName,
+              mimeType: fileResult.mimeType,
+              size: fileResult.size,
+              path: fileResult.path,
+              category: 'OTHER', // Default category for bulk upload
+              userId: req.user.id,
+            },
+          });
+
+          uploadedFiles.push({
+            ...savedFile,
+            downloadUrl: fileService.getFileUrl(savedFile.filename)
+          });
         }
-
-        // Save file to disk
-        const fileResult = await fileService.saveFile(
-          file.buffer,
-          file.originalname,
-          file.mimetype,
-          req.user.id
-        );
-
-        // Save file metadata to database
-        const savedFile = await prisma.file.create({
-          data: {
-            filename: fileResult.filename,
-            originalName: fileResult.originalName,
-            mimeType: fileResult.mimeType,
-            size: fileResult.size,
-            path: fileResult.path,
-            category: 'OTHER', // Default category for bulk upload
-            userId: req.user.id,
-          },
-        });
-
-        uploadedFiles.push({
-          ...savedFile,
-          downloadUrl: fileService.getFileUrl(savedFile.filename)
-        });
       } catch (error) {
         console.error(`Error uploading file ${file.originalname}:`, error);
         failedFiles.push({
