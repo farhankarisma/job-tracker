@@ -115,14 +115,14 @@ export default function Sidebar({ userEmail, onLogout }: SidebarProps) {
                     <Icon
                       className={`w-5 h-5 ${
                         isActive
-                          ? "text-black"
+                          ? "text-gray-800"
                           : "text-gray-400 group-hover:text-gray-600"
                       }`}
                     />
                     <div className="flex-1">
                       <div
                         className={`font-medium ${
-                          isActive ? "text-black" : "text-gray-900"
+                          isActive ? "text-gray-800" : "text-gray-500"
                         }`}
                       >
                         {item.name}

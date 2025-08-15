@@ -349,15 +349,20 @@ app.post("/api/files/upload-multiple", protect, uploadMultiple, async (req: Auth
 
     const files = req.files as Express.Multer.File[];
     const uploadedFiles = [];
+    const failedFiles = [];
 
     for (const file of files) {
-      // Validate each file
-      const validation = fileService.validateFile(file);
-      if (!validation.isValid) {
-        continue; // Skip invalid files
-      }
-
       try {
+        // Validate each file
+        const validation = fileService.validateFile(file);
+        if (!validation.isValid) {
+          failedFiles.push({
+            filename: file.originalname,
+            error: validation.error
+          });
+          continue;
+        }
+
         // Save file to disk
         const fileResult = await fileService.saveFile(
           file.buffer,
@@ -385,13 +390,35 @@ app.post("/api/files/upload-multiple", protect, uploadMultiple, async (req: Auth
         });
       } catch (error) {
         console.error(`Error uploading file ${file.originalname}:`, error);
+        failedFiles.push({
+          filename: file.originalname,
+          error: "Failed to process file"
+        });
       }
     }
 
-    res.status(201).json({
-      message: `${uploadedFiles.length} files uploaded successfully`,
-      files: uploadedFiles
-    });
+    // Return comprehensive response
+    const response: any = {
+      message: `${uploadedFiles.length} of ${files.length} files uploaded successfully`,
+      files: uploadedFiles,
+      totalAttempted: files.length,
+      successCount: uploadedFiles.length,
+      failureCount: failedFiles.length
+    };
+
+    if (failedFiles.length > 0) {
+      response.failedFiles = failedFiles;
+    }
+
+    // If all files failed, return error status
+    if (uploadedFiles.length === 0) {
+      return res.status(400).json({
+        error: "Failed to upload any files",
+        ...response
+      });
+    }
+
+    res.status(201).json(response);
   } catch (error) {
     console.error("Error uploading files:", error);
     res.status(500).json({ error: "Error uploading files" });

@@ -16,11 +16,11 @@ export default function FileFilters({
   onSearchChange 
 }: FileFiltersProps) {
   return (
-    <div className="flex flex-col sm:flex-row gap-4 mb-6 p-4 bg-white rounded-lg shadow-sm">
+    <div className="flex flex-col sm:flex-row gap-4 mb-6 p-4 bg-white rounded-lg shadow-sm text-gray-500">
       <div className="flex items-center gap-2">
         <label className="text-sm font-medium">Category:</label>
         <select
-          value={selectedCategory}
+          value={selectedCategory} 
           onChange={(e) => onCategoryChange(e.target.value)}
           className="border rounded px-3 py-1 text-sm"
         >

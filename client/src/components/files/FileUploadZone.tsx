@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { HiOutlineUpload } from 'react-icons/hi';
+import toast from 'react-hot-toast';
 
 interface FileUploadZoneProps {
   onFileUpload: (files: FileList) => void;
@@ -11,6 +12,63 @@ interface FileUploadZoneProps {
 
 export default function FileUploadZone({ onFileUpload, isUploading, uploadingFiles }: FileUploadZoneProps) {
   const [dragActive, setDragActive] = useState(false);
+
+  // File validation settings
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+  const ALLOWED_EXTENSIONS = [
+    '.pdf', '.doc', '.docx', '.txt', '.rtf',
+    '.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp',
+    '.zip', '.rar', '.7z', '.tar', '.gz',
+    '.xls', '.xlsx', '.csv',
+    '.ppt', '.pptx'
+  ];
+
+  const validateFiles = (files: FileList): File[] => {
+    const validFiles: File[] = [];
+    const invalidFiles: string[] = [];
+
+    Array.from(files).forEach((file) => {
+      // Check file size
+      if (file.size > MAX_FILE_SIZE) {
+        invalidFiles.push(`${file.name} (too large - max 10MB)`);
+        return;
+      }
+
+      // Check file extension
+      const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+      if (!ALLOWED_EXTENSIONS.includes(fileExtension)) {
+        invalidFiles.push(`${file.name} (unsupported format)`);
+        return;
+      }
+
+      validFiles.push(file);
+    });
+
+    // Show error toast for invalid files
+    if (invalidFiles.length > 0) {
+      toast.error(
+        `Cannot upload: ${invalidFiles.join(', ')}`,
+        { duration: 6000 }
+      );
+    }
+
+    return validFiles;
+  };
+
+  const processFiles = (files: FileList) => {
+    const validFiles = validateFiles(files);
+    
+    if (validFiles.length > 0) {
+      // Create a new FileList-like object with only valid files
+      const dt = new DataTransfer();
+      validFiles.forEach(file => dt.items.add(file));
+      onFileUpload(dt.files);
+      
+      if (validFiles.length < files.length) {
+        toast.success(`${validFiles.length} valid file(s) will be uploaded`);
+      }
+    }
+  };
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -28,13 +86,15 @@ export default function FileUploadZone({ onFileUpload, isUploading, uploadingFil
     setDragActive(false);
     
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      onFileUpload(e.dataTransfer.files);
+      processFiles(e.dataTransfer.files);
     }
   };
 
   const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
-      onFileUpload(event.target.files);
+      processFiles(event.target.files);
+      // Reset the input value so the same file can be selected again if needed
+      event.target.value = '';
     }
   };
 
@@ -42,7 +102,7 @@ export default function FileUploadZone({ onFileUpload, isUploading, uploadingFil
     <>
       {/* Upload Button */}
       <div className="flex justify-end mb-6">
-        <label className="cursor-pointer px-4 py-2 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-lg hover:from-green-700 hover:to-blue-700 transition-all duration-200 font-medium shadow-lg flex items-center gap-2">
+        <label className="cursor-pointer px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 font-medium shadow-lg flex items-center gap-2">
           <HiOutlineUpload className="w-4 h-4" />
           Upload Files
           <input
@@ -50,7 +110,7 @@ export default function FileUploadZone({ onFileUpload, isUploading, uploadingFil
             multiple
             onChange={handleFileInputChange}
             className="hidden"
-            accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.webp,.zip,.rar,.xls,.xlsx"
+            accept=".pdf,.doc,.docx,.txt,.rtf,.jpg,.jpeg,.png,.gif,.webp,.bmp,.zip,.rar,.7z,.tar,.gz,.xls,.xlsx,.csv,.ppt,.pptx"
           />
         </label>
       </div>
@@ -72,7 +132,10 @@ export default function FileUploadZone({ onFileUpload, isUploading, uploadingFil
           Drag and drop files here, or click the upload button above
         </p>
         <p className="text-sm text-gray-500">
-          PDF, Word, Excel, Images (max 10MB each)
+          Documents, Images, Archives (max 10MB each)
+        </p>
+        <p className="text-xs text-gray-400 mt-1">
+          Supported: PDF, Word, Excel, PowerPoint, Images, ZIP/RAR
         </p>
       </div>
 

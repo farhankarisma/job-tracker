@@ -88,7 +88,7 @@ export default function DashboardPage() {
           max-w-md w-full bg-white shadow-xl rounded-lg pointer-events-auto flex flex-col ring-1 ring-black ring-opacity-5
         `}
         >
-          <div className="bg-gradient-to-r from-green-500 to-teal-500 px-6 py-4 rounded-t-lg">
+          <div className="bg-green-500 px-6 py-4 rounded-t-lg">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-white">
                 Job Portal Recommendations
@@ -175,22 +175,22 @@ export default function DashboardPage() {
 
       <div className="flex-1 lg:ml-0">
         <div className="p-4 sm:p-8">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center gap-4">
+          <div className="flex justify-between items-center mb-6 gap-10">
+            <div className="flex items-center gap-2">
               <div>
-                <h1 className="text-3xl font-bold text-gray-800">
+                <h1 className="text-xl lg:text-3xl font-bold text-gray-800">
                   Job Tracker
                 </h1>
-                <p className="text-gray-600 mt-1">
+                <p className="text-sm lg:text-[16px] text-gray-600 mt-1">
                   Manage your job applications
                 </p>
               </div>
               <button
                 onClick={() => showJobPortalRecommendations()}
-                className="px-3 py-2 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-lg hover:from-green-600 hover:to-teal-600 transition-all duration-200 font-medium shadow-md text-sm flex items-center gap-2"
+                className="px-2 py-2 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-lg hover:from-green-600 hover:to-teal-600 transition-all duration-200 font-medium shadow-md text-xs lg:text-sm flex items-center gap-2"
               >
                 <svg
-                  className="w-4 h-4"
+                  className="w-4 h-4 hidden lg:block"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -207,7 +207,7 @@ export default function DashboardPage() {
             </div>
             <button
               onClick={() => dispatch(openAddJobModal())}
-              className="px-4 py-2 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-medium shadow-lg"
+              className="px-4 py-2 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-lg hover:from-green-600 hover:to-teal-600 transition-all duration-200 font-medium text-sm shadow-lg"
             >
               + Add New Job
             </button>

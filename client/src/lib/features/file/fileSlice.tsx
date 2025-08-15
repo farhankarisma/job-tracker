@@ -94,32 +94,77 @@ export const uploadFile = createAsyncThunk(
         body: formData,
       });
 
+      const result = await response.json();
+      
       if (!response.ok) {
-        throw new Error(`Failed to upload ${params.file.name}`);
+        throw new Error(result.error || `Failed to upload ${params.file.name}`);
       }
 
-      const result = await response.json();
       dispatch(removeUploadingFile(params.file.name));
       return result;
     } catch (error) {
       dispatch(removeUploadingFile(params.file.name));
-      return rejectWithValue(error instanceof Error ? error.message : 'Upload failed');
+      return rejectWithValue(error instanceof Error ? error.message : `Failed to upload ${params.file.name}`);
     }
   }
 );
 
 export const uploadMultipleFiles = createAsyncThunk(
   'files/uploadMultipleFiles',
-  async (params: { token: string; files: File[]; category?: string }, { dispatch }) => {
-    const uploadPromises = params.files.map(file =>
-      dispatch(uploadFile({ token: params.token, file, category: params.category }))
-    );
+  async (params: { token: string; files: File[]; category?: string }, { dispatch, rejectWithValue }) => {
+    try {
+      // Add all files to uploading state
+      params.files.forEach(file => {
+        dispatch(addUploadingFile(file.name));
+      });
 
-    const results = await Promise.allSettled(uploadPromises);
-    const successful = results.filter(result => result.status === 'fulfilled');
-    const failed = results.filter(result => result.status === 'rejected');
+      const formData = new FormData();
+      params.files.forEach(file => {
+        formData.append('files', file);
+      });
+      formData.append('category', params.category || 'OTHER');
 
-    return { successful: successful.length, failed: failed.length };
+      const response = await fetch('http://localhost:3001/api/files/upload-multiple', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${params.token}`,
+        },
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      // Remove all files from uploading state
+      params.files.forEach(file => {
+        dispatch(removeUploadingFile(file.name));
+      });
+
+      if (!response.ok) {
+        // If there are specific failed files, provide more detailed error
+        if (result.failedFiles && result.failedFiles.length > 0) {
+          const failedFileNames = result.failedFiles.map((f: any) => f.filename).join(', ');
+          throw new Error(`Failed to upload: ${failedFileNames}`);
+        }
+        throw new Error(result.error || 'Failed to upload files');
+      }
+
+      // If some files failed but some succeeded, we still return success but with warnings
+      if (result.failedFiles && result.failedFiles.length > 0) {
+        const failedFileNames = result.failedFiles.map((f: any) => `${f.filename} (${f.error})`).join(', ');
+        return {
+          ...result,
+          warning: `Some files failed: ${failedFileNames}`
+        };
+      }
+
+      return result;
+    } catch (error) {
+      // Remove all files from uploading state on error
+      params.files.forEach(file => {
+        dispatch(removeUploadingFile(file.name));
+      });
+      return rejectWithValue(error instanceof Error ? error.message : 'Failed to upload files');
+    }
   }
 );
 
@@ -287,6 +332,23 @@ const filesSlice = createSlice({
         }
       })
       .addCase(uploadFile.rejected, (state, action) => {
+        state.error = action.payload as string;
+      })
+      
+      // Upload multiple files
+      .addCase(uploadMultipleFiles.fulfilled, (state, action) => {
+        if (action.payload && action.payload.files) {
+          const newFiles = Array.isArray(action.payload.files) ? action.payload.files : [];
+          state.files = [...newFiles, ...state.files];
+          state.filteredFiles = filterFiles(state.files, state.filters.category, state.filters.searchTerm);
+          
+          // If there's a warning about failed files, set it as error for toast display
+          if (action.payload.warning) {
+            state.error = action.payload.warning;
+          }
+        }
+      })
+      .addCase(uploadMultipleFiles.rejected, (state, action) => {
         state.error = action.payload as string;
       })
       

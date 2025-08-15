@@ -1,14 +1,15 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/src/supabaseClient'; 
-import type { Session } from '@supabase/supabase-js';
-import Sidebar from '@/components/Sidebar';
-import FileUploadZone from '@/components/files/FileUploadZone';
-import FileFilters from '@/components/files/FileFilters';
-import FileGrid from '@/components/files/FileGrid';
-import { useFiles } from '@/hooks/useFiles';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/src/supabaseClient";
+import type { Session } from "@supabase/supabase-js";
+import toast from "react-hot-toast";
+import Sidebar from "@/components/Sidebar";
+import FileUploadZone from "@/components/files/FileUploadZone";
+import FileFilters from "@/components/files/FileFilters";
+import FileGrid from "@/components/files/FileGrid";
+import { useFiles } from "@/hooks/useFiles";
 
 export default function FileStorePage() {
   const router = useRouter();
@@ -23,8 +24,8 @@ export default function FileStorePage() {
 
   const getAuthToken = () => {
     // Check if we're in the browser (client-side)
-    if (typeof window !== 'undefined' && isClient) {
-      return localStorage.getItem('authToken') || session?.access_token || null;
+    if (typeof window !== "undefined" && isClient) {
+      return localStorage.getItem("authToken") || session?.access_token || null;
     }
     // On server-side, only use session token
     return session?.access_token || null;
@@ -37,7 +38,6 @@ export default function FileStorePage() {
     error,
     filters,
     filesCount,
-    totalSize,
     loadFiles,
     uploadFiles,
     downloadFile,
@@ -52,78 +52,118 @@ export default function FileStorePage() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
-        router.push('/login');
+        router.push("/login");
       } else {
         setSession(session);
         setIsLoading(false);
         // Only load files after session is established and we're on client side
-        if (typeof window !== 'undefined' && isClient) {
+        if (typeof window !== "undefined" && isClient) {
           loadFiles();
         }
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        if (!session) {
-          router.push('/login');
-        }
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (!session) {
+        router.push("/login");
       }
-    );
+    });
 
     return () => subscription.unsubscribe();
   }, [router]);
 
   useEffect(() => {
     const token = getAuthToken();
-    if (token && typeof window !== 'undefined' && isClient) {
+    if (token && typeof window !== "undefined" && isClient) {
       loadFiles(filters.category, filters.searchTerm);
     }
   }, [filters.category, filters.searchTerm, session, isClient]); // Add session and isClient as dependencies
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    localStorage.removeItem('authToken');
-    router.push('/');
+    localStorage.removeItem("authToken");
+    router.push("/");
   };
 
   const handleFileUpload = async (fileList: FileList) => {
-    await uploadFiles(fileList, 'OTHER');
-    loadFiles(); // Refresh the list after upload
+    try {
+      const result = await uploadFiles(fileList, "OTHER");
+      
+      // Check if the result contains information about upload results
+      if (result && typeof result === 'object' && 'payload' in result) {
+        const payload = result.payload as any;
+        
+        if (payload && payload.warning) {
+          // Show warning for partial failures
+          toast.error(payload.warning, { duration: 6000 });
+          if (payload.successCount > 0) {
+            toast.success(`Successfully uploaded ${payload.successCount} file(s)`);
+          }
+        } else if (payload && payload.successCount) {
+          toast.success(`Successfully uploaded ${payload.successCount} file(s)`);
+        } else {
+          toast.success(`Successfully uploaded files`);
+        }
+      } else {
+        toast.success(`Successfully uploaded files`);
+      }
+      
+      loadFiles(); // Refresh the list after upload
+    } catch (error) {
+      // Error should already be handled by the useEffect for error state
+      console.error('Upload error:', error);
+    }
   };
 
   const handleDownload = async (file: any) => {
-    await downloadFile(file);
+    try {
+      await downloadFile(file);
+      toast.success(`Downloaded ${file.name}`);
+    } catch (error) {
+      toast.error(`Failed to download ${file.name}`);
+    }
   };
 
   const handleDelete = async (file: any) => {
-    await deleteFile(file.id);
+    try {
+      await deleteFile(file.id);
+      toast.success(`Deleted ${file.name}`);
+    } catch (error) {
+      toast.error(`Failed to delete ${file.name}`);
+    }
   };
 
   const handleUpdate = async (fileId: string, updates: any) => {
-    await updateFile(fileId, updates);
+    try {
+      await updateFile(fileId, updates);
+      toast.success("File updated successfully");
+    } catch (error) {
+      toast.error("Failed to update file");
+    }
   };
 
   useEffect(() => {
     if (error) {
-      console.error('File operation error:', error);
-      // Optionally show a toast notification
-      setTimeout(() => clearError(), 5000);
+      toast.error(error);
+      setTimeout(() => clearError(), 1000);
     }
   }, [error, clearError]);
 
   if (isLoading || !session || !isClient) {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen">
+        Loading...
+      </div>
+    );
   }
 
   return (
     <div className="flex bg-gray-50 min-h-screen">
-      <Sidebar 
-        userEmail={session.user.email}
-        onLogout={handleLogout}
-      />
-      
+      <Sidebar userEmail={session.user.email} onLogout={handleLogout} />
+
       <div className="flex-1 lg:ml-0">
         <div className="p-4 sm:p-8">
           {/* Header with Stats */}
@@ -131,18 +171,16 @@ export default function FileStorePage() {
             <div className="flex justify-between items-start">
               <div>
                 <h1 className="text-3xl font-bold text-gray-800">File Store</h1>
-                <p className="text-gray-600 mt-1">Store and manage your documents</p>
+                <p className="text-gray-600 mt-1">
+                  Store and manage your documents
+                </p>
               </div>
-              
+
               {/* File Stats */}
               <div className="flex gap-4 text-sm text-gray-600">
                 <div className="text-center">
                   <div className="font-semibold text-lg">{filesCount}</div>
                   <div>Files</div>
-                </div>
-                <div className="text-center">
-                  <div className="font-semibold text-lg">{formatFileSize(totalSize)}</div>
-                  <div>Total Size</div>
                 </div>
               </div>
             </div>

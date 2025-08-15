@@ -111,10 +111,10 @@ export default function AddApplicationModal() {
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/50 bg-opacity-60 flex justify-center items-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-t-xl">
+        <div className="text-black p-6 rounded-t-xl">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold">Add New Job Application</h2>
             <button
@@ -143,8 +143,8 @@ export default function AddApplicationModal() {
                 placeholder="e.g., Google, Microsoft"
                 value={company}
                 onChange={(e) => setCompany(e.target.value)}
-                className={`w-full p-3 border-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.company ? 'border-red-500 bg-red-50' : 'border-gray-300 focus:border-blue-500'
+                className={`w-full p-3 border-2 rounded-lg transition-colors text-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                  errors.company ? 'border-red-500 bg-red-50' : 'border-gray-300 focus:border-green-500'
                 }`}
                 disabled={isSubmitting}
               />
@@ -161,8 +161,8 @@ export default function AddApplicationModal() {
                 placeholder="e.g., Software Engineer, Product Manager"
                 value={position}
                 onChange={(e) => setPosition(e.target.value)}
-                className={`w-full p-3 border-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.position ? 'border-red-500 bg-red-50' : 'border-gray-300 focus:border-blue-500'
+                className={`w-full p-3 border-2 rounded-lg transition-colors text-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                  errors.position ? 'border-red-500 bg-red-50' : 'border-gray-300 focus:border-green-500'
                 }`}
                 disabled={isSubmitting}
               />
@@ -181,7 +181,7 @@ export default function AddApplicationModal() {
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as JobStatus)}
-                className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full p-3 border-2 border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
                 disabled={isSubmitting}
               >
                 {Object.values(JobStatus).map((s) => (
@@ -198,7 +198,7 @@ export default function AddApplicationModal() {
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value as JobType)}
-                className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full p-3 border-2 border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
                 disabled={isSubmitting}
               >
                 {Object.values(JobType).map((t) => (
@@ -220,8 +220,8 @@ export default function AddApplicationModal() {
               placeholder="https://company.com/jobs/posting"
               value={jobUrl}
               onChange={(e) => setJobUrl(e.target.value)}
-              className={`w-full p-3 border-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.jobUrl ? 'border-red-500 bg-red-50' : 'border-gray-300 focus:border-blue-500'
+              className={`w-full p-3 border-2 rounded-lg transition-colors text-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                errors.jobUrl ? 'border-red-500 bg-red-50' : 'border-gray-300 focus:border-green-500'
               }`}
               disabled={isSubmitting}
             />
@@ -240,7 +240,7 @@ export default function AddApplicationModal() {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={4}
-              className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-vertical"
+              className="w-full p-3 border-2 border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors resize-vertical"
               disabled={isSubmitting}
             />
           </div>
@@ -256,7 +256,7 @@ export default function AddApplicationModal() {
                 value={reminderAt}
                 onChange={(e) => setReminderAt(e.target.value)}
                 min={new Date().toISOString().split('T')[0]}
-                className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full p-3 border-2 border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
                 disabled={isSubmitting}
               />
               <p className="text-xs text-gray-500 mt-1">Set a follow-up reminder</p>
@@ -297,7 +297,7 @@ export default function AddApplicationModal() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isSubmitting ? (
                 <>
