@@ -13,7 +13,7 @@ import { createClient } from '@supabase/supabase-js';
 
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const app = express();
@@ -201,6 +201,89 @@ app.get("/api/test-reminders", async (req, res) => {
     res.status(500).json({ 
       success: false, 
       message: "Error occurred during reminder check",
+      error: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
+// Get all jobs with reminders for testing
+app.get("/api/test-reminders/list", protect, async (req: AuthRequest, res) => {
+  try {
+    const jobsWithReminders = await prisma.job.findMany({
+      where: {
+        userId: req.user.id,
+        reminderAt: { not: null }
+      },
+      select: {
+        id: true,
+        company: true,
+        position: true,
+        reminderAt: true,
+        reminder_sent: true,
+        createdAt: true
+      },
+      orderBy: { reminderAt: 'asc' }
+    });
+
+    // Get today's date range for comparison
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setUTCDate(today.getUTCDate() + 1);
+
+    const todayReminders = jobsWithReminders.filter(job => 
+      job.reminderAt && job.reminderAt >= today && job.reminderAt < tomorrow
+    );
+
+    res.json({
+      success: true,
+      data: {
+        allReminders: jobsWithReminders,
+        todayReminders,
+        totalReminders: jobsWithReminders.length,
+        todayCount: todayReminders.length,
+        dateRange: {
+          today: today.toISOString(),
+          tomorrow: tomorrow.toISOString()
+        }
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching reminders:", error);
+    res.status(500).json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
+// Create a test job with reminder for today
+app.post("/api/test-reminders/create-test-job", protect, async (req: AuthRequest, res) => {
+  try {
+    const today = new Date();
+    today.setUTCHours(12, 0, 0, 0); // Set to noon today
+
+    const testJob = await prisma.job.create({
+      data: {
+        company: "Test Company",
+        position: "Test Position",
+        status: "APPLIED",
+        type: "INTERNSHIP", 
+        userId: req.user.id,
+        reminderAt: today,
+        notes: "This is a test job created for reminder testing"
+      }
+    });
+
+    res.json({
+      success: true,
+      message: "Test job created with reminder set for today",
+      job: testJob
+    });
+  } catch (error) {
+    console.error("Error creating test job:", error);
+    res.status(500).json({ 
+      success: false, 
       error: error instanceof Error ? error.message : String(error)
     });
   }

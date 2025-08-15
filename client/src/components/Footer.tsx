@@ -41,7 +41,6 @@ export default function Footer() {
               Get in Touch
             </h4>
             <div className="text-sm text-black space-y-2">
-              <p>Email: farhunter230@gmail.com</p>
               <div className="flex space-x-4 mt-4">
                 <Link
                   href="#"
