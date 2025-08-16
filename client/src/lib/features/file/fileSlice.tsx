@@ -1,4 +1,5 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import { API_BASE_URL } from "@/lib/api-config";
 
 export interface FileItem {
   id: string;
@@ -58,7 +59,7 @@ export const fetchFiles = createAsyncThunk(
         queryParams.append('search', params.search);
       }
 
-      const response = await fetch(`http://localhost:3001/api/files?${queryParams}`, {
+      const response = await fetch(`${API_BASE_URL}/api/files?${queryParams}`, {
         headers: {
           'Authorization': `Bearer ${params.token}`,
         },
@@ -86,7 +87,7 @@ export const uploadFile = createAsyncThunk(
 
       dispatch(addUploadingFile(params.file.name));
 
-      const response = await fetch('http://localhost:3001/api/files/upload', {
+      const response = await fetch('${API_BASE_URL}/api/files/upload', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${params.token}`,
@@ -124,7 +125,7 @@ export const uploadMultipleFiles = createAsyncThunk(
       });
       formData.append('category', params.category || 'OTHER');
 
-      const response = await fetch('http://localhost:3001/api/files/upload-multiple', {
+      const response = await fetch('${API_BASE_URL}/api/files/upload-multiple', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${params.token}`,
@@ -172,7 +173,7 @@ export const deleteFile = createAsyncThunk(
   'files/deleteFile',
   async (params: { token: string; fileId: string }, { rejectWithValue }) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/files/${params.fileId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/files/${params.fileId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${params.token}`,
@@ -201,7 +202,7 @@ export const updateFile = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/files/${params.fileId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/files/${params.fileId}`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${params.token}`,
@@ -226,7 +227,7 @@ export const downloadFile = createAsyncThunk(
   'files/downloadFile',
   async (params: { token: string; file: FileItem }, { rejectWithValue }) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/files/download/${params.file.filename}`, {
+      const response = await fetch(`${API_BASE_URL}/api/files/download/${params.file.filename}`, {
         headers: {
           'Authorization': `Bearer ${params.token}`,
         },

@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { Job, JobStatus } from "@/lib/type";
 import { supabase } from "@/lib/src/supabaseClient";
+import { API_BASE_URL } from "@/lib/api-config";
 
 interface JobsState {
   items: Job[];
@@ -28,7 +29,7 @@ export const fetchJobs = createAsyncThunk(
       if (!session) return thunkAPI.rejectWithValue("Not authenticated");
 
       const token = session.access_token;
-      const response = await fetch("http://localhost:3001/api/jobs", {
+      const response = await fetch(`${API_BASE_URL}/api/jobs`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -59,7 +60,7 @@ export const addJob = createAsyncThunk(
       if (!session) return thunkAPI.rejectWithValue("Not authenticated");
       const token = session.access_token;
 
-      const response = await fetch("http://localhost:3001/api/jobs", {
+      const response = await fetch(`${API_BASE_URL}/api/jobs`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -90,7 +91,7 @@ export const updateJobStatus = createAsyncThunk(
       const token = session.access_token;
 
       const response = await fetch(
-        `http://localhost:3001/api/jobs/${id}/status`,
+        `${API_BASE_URL}/api/jobs/${id}/status`,
         {
           method: "PATCH",
           headers: {
@@ -125,7 +126,7 @@ export const editJob = createAsyncThunk(
       const token = session.access_token;
 
       const { id, ...fieldsToUpdate } = jobData;
-      const response = await fetch(`http://localhost:3001/api/jobs/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/jobs/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -155,7 +156,7 @@ export const deleteJob = createAsyncThunk(
       if (!session) return thunkAPI.rejectWithValue("Not authenticated");
       const token = session.access_token;
 
-      const response = await fetch(`http://localhost:3001/api/jobs/${jobId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/jobs/${jobId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

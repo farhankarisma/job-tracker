@@ -33,7 +33,7 @@ export default function NoResultsState({ onClearFilters, hasFilters }: NoResults
         </>
       ) : (
         <p className="text-gray-600 max-w-md mx-auto">
-          You haven't added any job applications yet. Click the "Add New Job" button to get started!
+          You haven&apos;t added any job applications yet. Click the &quot;Add New Job&quot; button to get started!
         </p>
       )}
     </div>

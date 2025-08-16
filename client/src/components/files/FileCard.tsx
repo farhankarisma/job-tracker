@@ -38,7 +38,7 @@ export default function FileCard({ file, onDownload, onDelete, onUpdate, formatF
         return (
           <div className="flex flex-col gap-3">
             <p className="font-semibold text-gray-800">
-              Delete file "{file.originalName}"?
+              Delete file &quot;{file.originalName}&quot;?
             </p>
             <p className="text-sm text-gray-600">
               This action cannot be undone.
