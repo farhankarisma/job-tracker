@@ -87,7 +87,7 @@ export const uploadFile = createAsyncThunk(
 
       dispatch(addUploadingFile(params.file.name));
 
-      const response = await fetch('${API_BASE_URL}/api/files/upload', {
+      const response = await fetch(`${API_BASE_URL}/api/files/upload`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${params.token}`,
@@ -125,7 +125,7 @@ export const uploadMultipleFiles = createAsyncThunk(
       });
       formData.append('category', params.category || 'OTHER');
 
-      const response = await fetch('${API_BASE_URL}/api/files/upload-multiple', {
+      const response = await fetch(`${API_BASE_URL}/api/files/upload-multiple`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${params.token}`,
