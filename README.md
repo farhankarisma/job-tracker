@@ -219,18 +219,6 @@ npm run dev
 ```
 Frontend will run on `http://localhost:3000`
 
-### 🎉 **You're all set!**
-
-Visit `http://localhost:3000` to see your Gawekeun Job Tracker in action!
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
----
-
 ## 👨‍💻 Author
 
 **Farhan Karisma**
